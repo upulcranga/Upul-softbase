@@ -10,7 +10,7 @@ import java.util.Vector;
 
 public class Node implements Comparable {
 
-	protected long ID;
+	protected Integer ID;
 	protected int indended_degree;
 	protected Vector<Link> links;
 	protected Random random;
@@ -34,7 +34,7 @@ public class Node implements Comparable {
 	/*variables for network dynamics*/
     double nodeReading; //a generic variable to indicate sensor reading, expression level etc
     double riskFactor; //A variable that indicates a node's 'Risk Level' in decease networks
-    int birth_timestep; //The timestep in which this node has been added -  needed to analyse the 'history' of node in PA type scenarios
+    int birth_timestep; //The timestep in which this node has been added -  needed to analyze the 'history' of node in PA type scenarios
     protected double p_t; //variables to calculate pagerank
     protected double p_t_1;
     protected int noOfStalkers; //variables to calculate stalking coefficients
@@ -48,12 +48,15 @@ public class Node implements Comparable {
     public double gameTotalPayoff = 0; //previous variable name 'coordinationValue': the total pay-off a player has accumulated during the evolutionary game process
     public int payOffLag = 20; //the lag time after which the payoffs are taken into account
     public double[] payOffBuffer =  new double[payOffLag+1]; //The extra cell is given so that the curren value can be stored
-
+    public double researchAbility = 0; //for p-rank calculations
+    public double impactFactor = 0; //for papernet
+	public int numberOfCitations = generateRandom(10,50); //for papernet
+	public Integer [] authorArray = new Integer[generateRandom(1,5)]; //for papernet
     
     
     public Node()
 	{
-	
+    	
 	}
     
     public Node(int id)
@@ -294,6 +297,9 @@ public class Node implements Comparable {
 		return neighbours;
 	}
 	
+	public int generateRandom(int min, int max){
+		return min + (int)(Math.random() * ((max - min) + 1)); //return a random number of citations to be initiated.
+	}
 
 	/**
 	 * In this function, self-links and double links are not counted
@@ -449,6 +455,9 @@ public class Node implements Comparable {
 		 return l;
 	}
 
+	public void assignAuthors(Integer [] authors){
+		authorArray = authors;
+	}
 	 
 	public void assignWeight(double w){
 		weight = w;

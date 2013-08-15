@@ -3,6 +3,7 @@ package Basic;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Vector;
 
@@ -10,7 +11,6 @@ import Distributions.EDistribution;
 import Distributions.EDistributionGenerator;
 import Distributions.QDistribution;
 import Distributions.QDistribution_PowerLaw;
-
 import oldClassesArchive.AssortativenessCalculator;
 
 /**
@@ -19,10 +19,7 @@ import oldClassesArchive.AssortativenessCalculator;
  * @author Piraveenan
  *
  */
-public class NetworkGenerator {
-	
-	
-	
+public class NetworkGeneratorRefined {
 	
 	public Network generateStar(int size)
 	{
@@ -899,7 +896,7 @@ public class NetworkGenerator {
 	public Network growNetworkPA(int size, double joiningp)
 	{
 		BufferedWriter out = null;
-		
+
 		Random rand = new Random();
 		
 		Network net = new Network();
@@ -949,9 +946,9 @@ public class NetworkGenerator {
 				}
 			}
 				
-			net.addNode(node);              
+			net.addNode(node);
 			net.createTextFile("f://CNRes/PA_"+i+".txt");
-				
+			
 		}
 		System.out.println("net size nodes "+net.getSize()+ " links "+ net.getNoOfLinks());
 		return net;
@@ -1295,6 +1292,168 @@ public class NetworkGenerator {
 
 		return check;
 	}
+	
+	public Network growNetwork(int size, double joiningp){
+
+		Network net = new Network();
+		Network authorNet = new Network();
+		BufferedWriter out = null;
+
+		Random rand = new Random();
+		//First Node
+		Node firstNode  = new Node(0);
+		firstNode.assignWeight(generateRandom(0.0,20.0)); //weight is equivalent to the impact factor
+		net.addNode(firstNode);
+		
+		Node firstAuthor = new Node(0);//add a new author to authornet
+		firstAuthor.assignWeight(100);
+		authorNet.addNode(firstAuthor);
+		Node secondAuthor = new Node(1);
+		secondAuthor.assignWeight(100);
+		authorNet.addNode(secondAuthor);
+		firstAuthor.addLink(secondAuthor, false);
+
+		//Add the rest of the nodes acccording to PA
+		double p = joiningp; //Joining probability - a parameter
+		for(int i = 1; i < size; i++)
+		{
+			Node node = new Node(i);
+			node.assignWeight(generateRandom(0.0,20.0)); //weight is equivalent to the impact factor
+			/*int[] authorsArray = generateAuthors(i,node.authorArray.length);//get the new authors and old authors count
+			//int[] randArray = new int [(node.authorArray.length-authorsArray[node.authorArray.length])];
+			for (int y=0;y<(node.authorArray.length-authorsArray[node.authorArray.length]);y++){//pick old authors randomly
+				int gen = generateRandom(0,authorNet.getAllNodes().size());
+				System.out.println(gen);
+				System.out.println(authorNet.getAllNodes().elementAt(gen).ID);
+				Integer auth= authorNet.getAllNodes().elementAt(gen).ID;
+				while(Arrays.asList(node.authorArray).contains(auth)){
+					auth= authorNet.getAllNodes().elementAt(generateRandom(1,authorNet.getAllNodes().size())).ID;
+				}
+				node.authorArray[y]=auth;
+			}
+			
+			for(int z=0;z<authorsArray[node.authorArray.length];z++){//create nodes for new authors
+				Node author = new Node(authorNet.networkSize+1);
+				authorNet.addNode(author);
+			}
+			
+			for (int j=0;j<node.authorArray.length;j++){
+				for (int k=j+1;k<node.authorArray.length;k++){
+					if(!(authorNet.getAllNodes().elementAt(node.authorArray[j]).isLinked(authorNet.getAllNodes().elementAt(node.authorArray[k])))){
+						try 
+						{
+							net.addLink(authorNet.getAllNodes().elementAt(node.authorArray[j]), authorNet.getAllNodes().elementAt(node.authorArray[k]));
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}*/
+			
+			double probs[] =  new double[net.getSize()];
+			int citationsToNetwork = (int)(citationToNetwork(i,node.numberOfCitations)*node.numberOfCitations);//citations to network as a function of time
+
+			for(int j = 0; j <citationsToNetwork;j++)
+			{
+				Node destNode = net.getAllNodes().elementAt(j);
+				double prob = p;
+				if(net.getNoOfLinks() > 0 && destNode.getNumberOfLinks() > 0)
+				{
+					//prob = p*((double)destNode.getNumberOfLinks()) / (double)net.getNoOfLinks();
+					prob = (prob*destNode.getWeight()* (double)destNode.getNumberOfInLinks()) / (double)net.getWeightedDegreeSum(); //For weighted PA
+				}
+				else //No links made yet
+				{
+					//prob = p;
+					prob = prob*destNode.getWeight(); //For weighted PA
+				}
+				probs[j] = prob;
+			}
+
+			for(int j = 0; j <citationsToNetwork;j++)
+			{
+				Node destNode = net.getAllNodes().elementAt(j);
+				//Throw dice
+				if(rand.nextDouble() <=  probs[j])
+				{
+					try 
+					{
+						net.addLink(node, destNode);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				System.out.println("CitationsToNetwork = "+j);
+			}
+
+			net.addNode(node);
+			System.out.println("Number of Authors:" + node.authorArray.length);
+			//System.out.println(i+" Number of Citations:" + node.numberOfCitations + " Number of Citations to the Network:" + citationsToNetwork);
+
+			net.createTextFile("f://CNRes/paperNet_"+i+".txt");
+			authorNet.createTextFile("f://CNRes/authorNet_"+i+".txt");
+
+		}
+		System.out.println("net size nodes "+net.getSize()+ " links "+ net.getNoOfLinks());
+
+		return net;
+
+	}
+
+	public int generateRandom(int min, int max){
+		return min + (int)(Math.random() * ((max - min) + 1)); //return a random number of citations to be initiated.
+	}
+	
+	public int generateRandome(int min, int max){
+		return min + (int)(Math.random() * ((max - min))); //return a random number of citations to be initiated.
+	}
+
+	public double generateRandom(double min, double max){
+		return min + (Math.random() * ((max - min) + 1)); //return a random number of citations to be initiated.
+	}
+
+	public double citationToNetwork(int i, int j){
+
+		return 0.7/500 * Math.max(i, j);
+	}
+
+	public int[] generateAuthors(int i,int n){//n=number of authors for the paper, i=iteration variable to determine the percentage of old authors
+		int [] authors = new int[n+1];
+		int newA=0;
+		int oldA=0;
+		for(int j=0;j<n;j++){
+			double r = generateRandom(0,1);
+			if(r<(0.2*i/500)){
+				oldA++;
+				authors[j]=0;//pick an old author randomly
+			}
+			else
+				newA++;
+				authors[j]=1;//generate a new author
+		}
+		
+		authors[n]=newA;
+		return authors;
+		
+	}
+	
+	public int[] defineAuthors(int i, int n){
+		int [] authors = generateAuthors(i,n);
+		for(int j=0; j<n;j++){
+			if (authors[j]==0){
+				//pick an old author randomly
+			}
+			else if (authors[j]==1){
+				//generate a new authors
+			}
+					
+		}
+		
+		return authors;
+	}
+
 	
 	
 }
