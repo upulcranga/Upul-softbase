@@ -28,13 +28,13 @@ public class NetGenCPA {
 		
 			try {
 
-				net = gen.growNetwork(10, 0.5);
+				net = gen.growNetwork(100, 0.5);
 				
 
 				long endTime = System.currentTimeMillis();
 				System.out.println("Took " + (endTime - startTime) + " ms");
 
-				net.createTextFile("f://PA_100.txt");
+				//net.createTextFile("f://PA_100.txt");
 
 				//System.out.println("Net size nodes " + net.getSize() + " Links " + net.getNoOfLinks());
 

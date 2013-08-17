@@ -48,10 +48,13 @@ public class Node implements Comparable {
     public double gameTotalPayoff = 0; //previous variable name 'coordinationValue': the total pay-off a player has accumulated during the evolutionary game process
     public int payOffLag = 20; //the lag time after which the payoffs are taken into account
     public double[] payOffBuffer =  new double[payOffLag+1]; //The extra cell is given so that the curren value can be stored
-    public double researchAbility = 0; //for p-rank calculations
+    public double researchAbility = generateRandom(0,100); //for authorNet
+    public double percentile = 0; //
     public double impactFactor = 0; //for papernet
 	public int numberOfCitations = generateRandom(10,50); //for papernet
 	public Integer [] authorArray = new Integer[generateRandom(1,5)]; //for papernet
+	public ArrayList<Integer> papers = new ArrayList<Integer>();
+	public int hIndex = 0;
     
     
     public Node()
@@ -88,6 +91,8 @@ public class Node implements Comparable {
 	
 	}
 	
+
+    
 	public Node(int id, int d)
 	{
 		ID = id;
@@ -116,7 +121,7 @@ public class Node implements Comparable {
         noOfVictims=0;
 	}
 	
-	public long getID()
+	public Integer getID()
 	{
 		return ID;
 	}
