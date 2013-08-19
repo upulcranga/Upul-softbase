@@ -1,6 +1,7 @@
 package Basic;
 
 import java.io.BufferedWriter;
+import java.text.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +9,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
+
+import org.apache.commons.math3.stat.Frequency;
 
 import Distributions.EDistribution;
 import Distributions.EDistributionGenerator;
@@ -1323,6 +1326,14 @@ public class NetworkGeneratorRefined {
 		secondAuthor.papers.add(firstNode.getID());
 		thirdAuthor.papers.add(firstNode.getID());
 		int newAuthors=0;
+		
+		BufferedWriter wrOut = null;
+		wrOut = new BufferedWriter(new FileWriter("f://CNRes/authorpIndex.txt"));
+		BufferedWriter wrhOut = null;
+		wrhOut = new BufferedWriter(new FileWriter("f://CNRes/authorhIndex.txt"));
+		BufferedWriter wrpOut = null;
+		wrpOut = new BufferedWriter(new FileWriter("f://CNRes/authorpRank.txt"));
+		
 
 		//Add the rest of the nodes acccording to PA
 		double p = joiningp; //Joining probability - a parameter
@@ -1356,7 +1367,7 @@ public class NetworkGeneratorRefined {
 			
 			//node.authorArray=randArray;
 			
-			System.out.println("Iteration: "+i+" AuthorNet Size: "+authorNet.getSize()+" New Authors: " + newAuthors);
+			//System.out.println("Iteration: "+i+" AuthorNet Size: "+authorNet.getSize()+" New Authors: " + newAuthors);
 			
 			for (int j=0;j<node.authorArray.length;j++){
 				for (int k=j+1;k<node.authorArray.length;k++){
@@ -1405,7 +1416,7 @@ public class NetworkGeneratorRefined {
 					try 
 					{
 						net.addLink(node, destNode);
-						System.out.println(node.getID()+" cited "+destNode.getID());
+						//System.out.println(node.getID()+" cited "+destNode.getID());
 						links++;
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
@@ -1416,29 +1427,100 @@ public class NetworkGeneratorRefined {
 			}
 
 			net.addNode(node);
-			System.out.println("Number of Authors:" + node.authorArray.length);
-			System.out.println("Number of Citations:" + node.numberOfCitations + " Number of Citations to the Network:" + citationsToNetwork);
+			//System.out.println("Number of Authors:" + node.authorArray.length);
+			//System.out.println("Number of Citations:" + node.numberOfCitations + " Number of Citations to the Network:" + citationsToNetwork);
 
-			net.createTextFile("f://CNRes/paperNet_"+i+".txt");
-			authorNet.createTextFile("f://CNRes/authorNet_"+i+".txt");
+			//net.createTextFile("f://CNRes/paperNet_"+i+".txt");
+			//authorNet.createTextFile("f://CNRes/authorNet_"+i+".txt");
 			
-			//calculate page rank
+			
+			ArrayList <Double> pRank=calculatepRank(authorNet,net);//calculate page rank
+			//System.out.println(pRank.toString());
+			wrOut.write(i+" ");
+			wrhOut.write(i+" ");
+			wrpOut.write(i+" ");
+			
 			ArrayList <Integer> hIndex=calculatehIndex(authorNet,net);//calculate h-index
-			System.out.println(hIndex.toString());
-			for (int f=0;f<authorNet.getSize();f++){
-				ArrayList <Integer> papers = authorNet.getNode(f).papers;
-				//System.out.println(papers.toString());
+			//System.out.println(hIndex.toString());
+			//net.writeIndices(authorNet, "f://CNRes/authorIndex_"+i+".txt");
+			for (int j = 0; j < authorNet.getSize(); j++) {
+				wrOut.write(authorNet.getNode(j).percentile + " ");
+				wrhOut.write(authorNet.getNode(j).hIndex + " ");
+				wrpOut.write(pRank.get(j).toString() + " ");
+				
 			}
 			
+			wrOut.write("\n");
+			wrhOut.write("\n");
+			wrpOut.write("\n");;
 		}
-		System.out.println("net size nodes "+net.getSize()+ " links "+ net.getNoOfLinks());
-		System.out.println("net size nodes "+authorNet.getSize()+ " links "+ authorNet.getNoOfLinks());
 		
-		
-		
-
+		/*Node spuriousAuthor = authorNet.getNode(0);
+		while(spuriousAuthor.hIndex<5){
+			Node sNode = new Node(net.getSize());
+			sNode.assignWeight(2);
+			net.addNode(sNode);
+			for (int k=1;k<sNode.authorArray.length;k++){
+				sNode.authorArray[k] = authorNet.getSize();
+				Node author = new Node(authorNet.getSize());
+				authorNet.addNode(author);
+				author.papers.add(sNode.getID());
+				authorNet.addLink(authorNet.getNode(0), author);
+			}
+			
+			for (int k=0;k<spuriousAuthor.papers.size();k++){
+				net.addLink(sNode.getID(), spuriousAuthor.papers.get(k));
+			}
+			ArrayList <Integer> h=calculatehIndex(authorNet,net);
+			System.out.println(h.toString());
+			calculatepRank(authorNet,net);
+			
+			
+		}
+			
+		wrOut.write(authorNet.getNode(0).percentile + " ");
+		wrhOut.write(authorNet.getNode(0).hIndex + " ");*/
+		System.out.println("Papernet size nodes "+net.getSize()+ " links "+ net.getNoOfLinks());
+		System.out.println("Authornet size nodes "+authorNet.getSize()+ " links "+ authorNet.getNoOfLinks());
+		wrOut.flush();
+		wrhOut.flush();
+		wrpOut.flush();
 		return net;
 
+	}
+	
+	public ArrayList<Double> calculatepRank(Network authors, Network net) throws Exception{
+        
+		for(int i=0;i<net.getSize();i++){
+			Node thisNode = net.getNode(i);
+			thisNode.updatePageRank(0.5, net.getSize());
+		}
+		
+		ArrayList <Double> pageRankSum = new ArrayList <Double>();
+		
+		for (int j = 0; j < authors.getSize(); j++) {
+			ArrayList<Integer> papers = authors.getNode(j).papers;
+			double pr = 0.0;
+			for (int k = 0; k < papers.size(); k++) {
+				pr = pr + net.getNode(papers.get(k)).getPageRank();//summing up the page rank values for each paper
+			}
+			pageRankSum.add(pr);
+		}
+		Frequency newf = new Frequency();
+		ArrayList<Double> ret = new ArrayList<Double>();
+		for(int x=0;x<pageRankSum.size();x++){
+			newf.addValue(pageRankSum.get(x));
+		}
+		for(int x=0;x<pageRankSum.size();x++){
+			int dec = (int)(newf.getCumPct(pageRankSum.get(x))*1000);
+			double d = dec/10.0;
+			ret.add(d);
+			authors.getNode(x).percentile=d;
+		}
+		
+		//System.out.println(pageRankSum.toString());
+		
+		return pageRankSum;
 	}
 	
 	public ArrayList<Integer> calculatehIndex(Network authors, Network papernet) throws Exception{
@@ -1454,7 +1536,7 @@ public class NetworkGeneratorRefined {
 			}
 			Collections.sort(nCite);
 			Collections.reverse(nCite);
-			System.out.println("Author: "+i+" "+nCite.toString());
+			//System.out.println("Author: "+i+" "+nCite.toString());
 			//int hInd=0;
 			int k=0;
 			for (k=0;k<nCite.size();k++){

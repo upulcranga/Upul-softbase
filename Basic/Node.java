@@ -3,6 +3,9 @@
  */
 package Basic;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -49,11 +52,11 @@ public class Node implements Comparable {
     public int payOffLag = 20; //the lag time after which the payoffs are taken into account
     public double[] payOffBuffer =  new double[payOffLag+1]; //The extra cell is given so that the curren value can be stored
     public double researchAbility = generateRandom(0,100); //for authorNet
-    public double percentile = 0; //
-    public double impactFactor = 0; //for papernet
+    public double percentile = 0; //percentile rank
+    //public double impactFactor = 0; //for papernet
 	public int numberOfCitations = generateRandom(10,50); //for papernet
 	public Integer [] authorArray = new Integer[generateRandom(1,5)]; //for papernet
-	public ArrayList<Integer> papers = new ArrayList<Integer>();
+	public ArrayList<Integer> papers = new ArrayList<Integer>();//papers authored/co-authored by each author
 	public int hIndex = 0;
     
     
@@ -1167,6 +1170,7 @@ public class Node implements Comparable {
     	}
     	payOffBuffer[0] = newVal;
     }
-
+    
+    
 
 }

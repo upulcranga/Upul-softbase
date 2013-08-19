@@ -5511,6 +5511,31 @@ public class Network {
 		
 		return authors;
 	}
+	
+	 public void writeIndices(Network authornet,String fileName) throws Exception
+		{
+			BufferedWriter out = null;
+
+			try {
+
+				out = new BufferedWriter(new FileWriter(fileName+".txt"));
+				for(int i=0; i< authornet.getSize();i++)
+				{
+					Node thisNode = authornet.getNode(i);
+					double percentile = thisNode.percentile;
+					int hIndex = thisNode.hIndex;
+					out.write(i+","+percentile+","+hIndex+"\n");
+					//System.out.println(xID+" "+yID);
+					out.flush();
+				}
+				//System.out.println("Created Txt File " + fileName + ".txt");
+			}
+
+			catch (IOException e) {
+				System.out.println("cant write to file");
+				e.printStackTrace();
+			}
+		}
 
 
 
