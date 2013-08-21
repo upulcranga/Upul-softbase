@@ -28,7 +28,7 @@ public class NetGenCPA {
 		
 			try {
 
-				net = gen.growNetwork(10, 0.5);
+				net = gen.growNetwork(10000, 0.5);
 				
 
 				long endTime = System.currentTimeMillis();
